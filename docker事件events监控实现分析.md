@@ -3,8 +3,9 @@
 1. 使用一个队列保存events事件，先进入到队列的事件先得到处理
 2. 开启一个协程，循环检测队列中是否有事件
 3. 队列事件的写入必须在另外的协程中，所以必须使用锁保护队列events数据
-4. 设计 sink 装载events,为保证设计的兼容性，sink设计为interface
+4. 设计 sink 装载events,为保证设计的兼容性，sink设计为interface,sink可理解为：运输船，将event事件运输到相应的协程
 5. sink 配合channel可以实现多协程间事件通知
+6. golang channel 为一对一方式通知，设计broadcast广播通知所有相关sinks
 
 ## 代码分析
 **核心代码文件：**
@@ -102,5 +103,8 @@ func (q *Queue) CallbackWatch(matcher events.Matcher) (eventq chan events.Event,
 	}
 }
 ```
-`events.NewChannel` `events.NewFilter` `events.Broadcast` 都是sink的实现特殊功能的封装类
+`events.NewChannel` `events.NewFilter` `events.Broadcast` 都是sink的实现特殊功能的封装类，具体实现参考源码：go-events目录下 filter.go broadcast.go channel.go
 `events.Broadcast`特殊说明下：**golang 的channel相当于一个管道，只能实现协程间一对一的通信；为了实现一对多的情况，go-events实现了broadcast机制:`list中有事件后，通知broadcast，再由broadcast遍历其中所有的sink，调用sink的write处理方法，通知相应的协程（一般情况是channel信号，协程根据channel执行相应events动作）`**
+
+
+

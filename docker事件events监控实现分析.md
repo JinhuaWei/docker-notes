@@ -87,14 +87,14 @@ func Watch(queue *watch.Queue, specifiers ...Event) (eventq chan events.Event, c
 CallbackWatch函数(state/watch/watch.go)
 ```
 func (q *Queue) CallbackWatch(matcher events.Matcher) (eventq chan events.Event, cancel func()) {
-	ch := events.NewChannel(0)              //event使用channel 封装
+	ch := events.NewChannel(0)              //event使用channel 封装，为了通知其他协程
 	sink := events.Sink(events.NewQueue(ch))// 封装为sink
 
 	if matcher != nil {
-		sink = events.NewFilter(sink, matcher) //使用Filter实现的sink：实现filter方法，挑选
+		sink = events.NewFilter(sink, matcher) //使用Filter实现的sink：实现filter方法，检测事件筛选
 	}
 
-	q.broadcast.Add(sink)
+	q.broadcast.Add(sink)  //将sink添加到 broadcast
 	return ch.C, func() {
 		q.broadcast.Remove(sink)
 		ch.Close()
@@ -102,3 +102,5 @@ func (q *Queue) CallbackWatch(matcher events.Matcher) (eventq chan events.Event,
 	}
 }
 ```
+`events.NewChannel` `events.NewFilter` `events.Broadcast` 都是sink的实现特殊功能的封装类
+`events.Broadcast`特殊说明下：**golang 的channel相当于一个管道，只能实现协程间一对一的通信；为了实现一对多的情况，go-events实现了broadcast机制:`list中有事件后，通知broadcast，再由broadcast遍历其中所有的sink，调用sink的write处理方法，通知相应的协程（一般情况是channel信号，协程根据channel执行相应events动作）`**

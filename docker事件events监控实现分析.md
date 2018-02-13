@@ -67,3 +67,38 @@ docker 实现了watch机制，等待事件或数据
 //监控queue事件队列上的EventUpdataTask事件
 Watch(queue, EventUpdateTask{})
 ```
+Watch函数源码（state/watch.go）
+```
+func Watch(queue *watch.Queue, specifiers ...Event) (eventq chan events.Event, cancel func()) {
+	if len(specifiers) == 0 {
+		return queue.Watch() // queue 默认watch函数
+	}
+	return queue.CallbackWatch(events.MatcherFunc(func(event events.Event) bool {
+		for _, s := range specifiers {
+			if s.matches(event) {
+				return true
+			}
+		}
+		return false
+	}))
+}
+```
+向CallbackWatch传入了一个匿名事件匹配函数
+CallbackWatch函数(state/watch/watch.go)
+```
+func (q *Queue) CallbackWatch(matcher events.Matcher) (eventq chan events.Event, cancel func()) {
+	ch := events.NewChannel(0)              //event使用channel 封装
+	sink := events.Sink(events.NewQueue(ch))// 封装为sink
+
+	if matcher != nil {
+		sink = events.NewFilter(sink, matcher) //使用Filter实现的sink：实现filter方法，挑选
+	}
+
+	q.broadcast.Add(sink)
+	return ch.C, func() {
+		q.broadcast.Remove(sink)
+		ch.Close()
+		sink.Close()
+	}
+}
+```

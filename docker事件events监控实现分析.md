@@ -62,7 +62,7 @@ Quene 的write方法，由其他协程调用，向List中写入event数据；
 最后达到的效果：有一个协程从始至终检测events事件，当另外的协程调用Queue的write方法写入事件时，检测到有event事件来，使用sink（具体上次实现）write方法处理事件；
 
 # docker watch机制
-docker 实现了watch机制，等待事件或数据
+docker 实现了watch机制，等待事件获取数据
 ## watch使用
 ```
 //监控queue事件队列上的EventUpdataTask事件

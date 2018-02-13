@@ -103,8 +103,10 @@ func (q *Queue) CallbackWatch(matcher events.Matcher) (eventq chan events.Event,
 	}
 }
 ```
+
 `events.NewChannel` `events.NewFilter` `events.Broadcast` 都是sink的实现特殊功能的封装类，具体实现参考源码：go-events目录下 filter.go broadcast.go channel.go
+
 `events.Broadcast`特殊说明下：**golang 的channel相当于一个管道，只能实现协程间一对一的通信；为了实现一对多的情况，go-events实现了broadcast机制:`list中有事件后，通知broadcast，再由broadcast遍历其中所有的sink，调用sink的write处理方法，通知相应的协程（一般情况是channel信号，协程根据channel执行相应events动作）`**
 
-
+通知Watch向注册监控事件，并获取返回的channel，并在当前协程阻塞、监控channel,当事件发生时，当前协程可通过channel获取事件类型作出相应的动作。
 

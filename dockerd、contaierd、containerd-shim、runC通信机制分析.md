@@ -426,4 +426,4 @@ shim端代码：
 ### containerd 和 runC 交互
 containerd 通过runC命令，获取命令返回输出，获取runC状态：如`(c *container) Status()`函数
 
-[01]: ./图片/整体通信.png "docker底层通信图"
+[01]: ./docker-通信.png "docker底层通信图"
